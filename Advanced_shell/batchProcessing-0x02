@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# List of Pokémon (case-insensitive, but API expects lowercase)
+POKEMONS=("Bulbasaur" "Ivysaur" "Venusaur" "Charmander" "Charmeleon")
+
+# Base API URL
+API_BASE="https://pokeapi.co/api/v2/pokemon"
+
+# Loop through each Pokémon
+for pokemon in "${POKEMONS[@]}"; do
+    # Convert name to lowercase for API call and filename
+    lower_name=$(echo "$pokemon" | awk '{print tolower($0)}')
+    output_file="${lower_name}.json"
+
+    echo "🔍 Fetching data for $pokemon..."
+
+    # Make the API call and capture HTTP status
+    http_status=$(curl -s -w "%{http_code}" -o "$output_file" "${API_BASE}/${lower_name}")
+
+    # Check if request was successful
+    if [ "$http_status" -eq 200 ]; then
+        echo "✅ Data saved to $output_file"
+    else
+        echo "❌ Failed to fetch data for $pokemon (HTTP $http_status)"
+        echo "$pokemon - HTTP $http_status" >> errors.txt
+        rm -f "$output_file"  # Delete incomplete file if error
+    fi
+
+    # Add delay to prevent hitting the rate limit
+    sleep 2
+done
+
