@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Input JSON file
+INPUT_FILE="data.json"
+
+# Check if the file exists
+if [ ! -f "$INPUT_FILE" ]; then
+    echo "❌ Error: $INPUT_FILE not found. Please run the previous script first."
+    exit 1
+fi
+
+# Extract fields using jq
+name=$(jq -r '.name' "$INPUT_FILE")
+height=$(jq -r '.height' "$INPUT_FILE")
+weight=$(jq -r '.weight' "$INPUT_FILE")
+type=$(jq -r '.types[0].type.name' "$INPUT_FILE")
+
+# Convert height from decimeters to meters using awk
+height_m=$(echo "$height" | awk '{printf "%.1f", $1 / 10}')
+
+# Convert weight from hectograms to kilograms using awk
+weight_kg=$(echo "$weight" | awk '{printf "%d", $1 / 10}')
+
+# Capitalize the name and type using sed
+name_cap=$(echo "$name" | sed 's/.*/\u&/')
+type_cap=$(echo "$type" | sed 's/.*/\u&/')
+
+# Print formatted output
+echo "$name_cap is of type $type_cap, weighs ${weight_kg}kg, and is ${height_m}m tall."
