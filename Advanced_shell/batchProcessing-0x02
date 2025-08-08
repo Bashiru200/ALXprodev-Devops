@@ -6,6 +6,50 @@ POKEMONS=("Bulbasaur" "Ivysaur" "Venusaur" "Charmander" "Charmeleon")
 # Base API URL
 API_BASE="https://pokeapi.co/api/v2/pokemon"
 
+# Error log file
+ERROR_LOG="errors.txt"
+
+# Loop through each Pokémon
+for pokemon in "${POKEMONS[@]}"; do
+    # Convert name to lowercase for API call and filename
+    lower_name=$(echo "$pokemon" | awk '{print tolower($0)}')
+    output_file="${lower_name}.json"
+
+    echo "🔍 Fetching data for $pokemon..."
+
+    success=false
+
+    # Retry logic: Try up to 3 times
+    for attempt in {1..3}; do
+        http_status=$(curl -s -w "%{http_code}" -o "$output_file" "${API_BASE}/${lower_name}")
+
+        if [ "$http_status" -eq 200 ]; then
+            echo "✅ Data saved to $output_file"
+            success=true
+            break
+        else
+            echo "⚠️ Attempt $attempt failed for $pokemon (HTTP $http_status)"
+            rm -f "$output_file"
+            sleep 1  # Optional delay between retries
+        fi
+    done
+
+    # If all attempts failed, log the error
+    if [ "$success" = false ]; then
+        echo "❌ Failed to fetch data for $pokemon after 3 attempts"
+        echo "$pokemon - HTTP $http_status" >> "$ERROR_LOG"
+    fi
+
+    sleep 2  # Delay between Pokémon to prevent rate limits
+done
+#!/bin/bash
+
+# List of Pokémon (case-insensitive, but API expects lowercase)
+POKEMONS=("Bulbasaur" "Ivysaur" "Venusaur" "Charmander" "Charmeleon")
+
+# Base API URL
+API_BASE="https://pokeapi.co/api/v2/pokemon"
+
 # Loop through each Pokémon
 for pokemon in "${POKEMONS[@]}"; do
     # Convert name to lowercase for API call and filename
